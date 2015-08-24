@@ -1,0 +1,15 @@
+I want to write a program that would allow to create and use Windows named pipes from Cygwin.
+
+The idea is the following: `progname` calls Windows function `CreateNamedPipe` and wraps the returned `HANDLE` with a Cygwin fd. After that the parent `bash` can duplicate import the fd using procfs:
+
+    $ progname MyPipe &
+    [1] 9108
+    $ ls -l /proc/$!/fd/3
+    lrwxrwxrwx 1 il None 0 рту 24 23:22 /proc/11628/fd/1 -> pipe:[856]
+    $ exec 3<>/proc/$!/fd/3
+    $ wait $!
+
+After that `progname` waits for a client and exits. Now bash can directly communicate with the named pipe client!
+
+It looks like cygwin exports a function `cygwin_attach_handle_to_fd` similar to msvcr `_open_osfhandle` 
+
